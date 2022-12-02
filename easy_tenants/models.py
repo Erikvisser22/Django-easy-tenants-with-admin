@@ -3,7 +3,7 @@ from django.db.models.expressions import BaseExpression
 
 from easy_tenants import get_current_tenant
 from easy_tenants.conf import settings
-from easy_tenants.utils import get_state
+from easy_tenants.utils import get_state, is_admin
 
 field_name = settings.EASY_TENANTS_TENANT_FIELD
 
@@ -51,7 +51,13 @@ class TenantAwareAbstract(models.Model):
 
     def save(self, *args, **kwargs):
         """Set tenant field on save"""
-        setattr(self, field_name, get_current_tenant())
+        tenantFieldSet = getattr(self, field_name, None) is not None
+
+        if tenantFieldSet and is_admin():
+            print(f'tenant already set: ', getattr(self, field_name))
+        else:
+            print(f'set tenant: ', get_current_tenant())
+            setattr(self, field_name, get_current_tenant())
 
         super().save(*args, **kwargs)
 
